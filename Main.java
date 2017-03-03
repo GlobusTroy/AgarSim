@@ -6,7 +6,7 @@ import javax.swing.*;
 public class Main {
 
     public static void main(String[] args) {
-        AgarWorld world = new AgarWorld(1, 1000.0);
+        AgarWorld world = new AgarWorld(1, 700,1000.0);
         AgarFrame frame = new AgarFrame("DEMO", world, 900);
         frame.setVisible(true);
         AgarCanvas canvas = frame.getCanvas();

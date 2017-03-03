@@ -6,33 +6,31 @@ import java.util.ArrayList;
  */
 public class AgarWorld {
 
-    private final double FORCE_BASE = 1000.0;
-    private final double DEATH_WEIGHT = 100.0;
-    private final double PUSH_FLAT_WEIGHT = 100.0;
-    private final double MASS_WEIGHT = 10.0;
-
     private final double CELL_MASS_CONSUME_RATIO = 1.25;
     private final double DECAY_PER_TICK = 0.25;
 
-    private final double NEW_FOOD_MASS_MIN = 0.0;
-    private final double NEW_FOOD_MASS_RANGE = 10.0;
-    private final double NEW_FOOD_X_MIN = 100.0;
-    private final double NEW_FOOD_X_RANGE = 700.0;
-    private final double NEW_FOOD_Y_MIN = 100.0;
-    private final double NEW_FOOD_Y_RANGE = 700.0;
+    private double newFoodMassMin = 0.0;
+    private double newFoodMassRange = 10.0;
+    private double newFoodXMin;
+    private double newFoodXRange;
+    private double newFoodYMin;
+    private double newFoodYRange;
 
     private double totalSystemMass;
     private double currentSystemMass;
     private ArrayList<PhysicalEntity> entities;
 
-    public AgarWorld(int cellCount, double systemMass) {
+    public AgarWorld(int cellCount, double systemSize, double systemMass) {
+
+        newFoodXMin = 100;
+        newFoodYMin = 100;
+        newFoodXRange = systemSize;
+        newFoodYRange = systemSize;
 
         entities = new ArrayList<>();
         for (int i = 0; i < cellCount; i++) {
             entities.add(new Cell(Math.random() * 800, Math.random() * 800, 50.0, 100.0, Color.blue, 500.0));
             currentSystemMass += 50;
-            entities.add(new Food(200 + Math.random() * 500, 200 + Math.random() * 500, 10));
-            currentSystemMass += 10;
         }
         this.totalSystemMass = systemMass;
     }
@@ -88,10 +86,10 @@ public class AgarWorld {
     }
 
     private Force getHomeInstinctForce(Cell cell) {
-        double homeX = (2 * NEW_FOOD_X_MIN + NEW_FOOD_X_RANGE) / 2;
-        double homeY = (2 * NEW_FOOD_Y_MIN + NEW_FOOD_Y_RANGE) / 2;
+        double homeX = (2 * newFoodXMin + newFoodXRange) / 2;
+        double homeY = (2 * newFoodYMin + newFoodYRange) / 2;
         double ang = getAngleBetween(cell.getX(), cell.getY(), homeX, homeY);
-        return new Force(FORCE_BASE, ang);
+        return new Force(NaturalLaws.FORCE_BASE_MULTIPLIER, ang);
     }
 
     private Force getForceBetween(PhysicalEntity entityForceUpon, PhysicalEntity entityForceFrom) {
@@ -99,14 +97,14 @@ public class AgarWorld {
         if (entityForceUpon instanceof Cell) {
             Cell cell = (Cell) entityForceUpon;
             if (distance <= (cell.getSenseRange())) {
-                double mag = FORCE_BASE / (distance * distance);
-                double ang = getAngleBetween(cell, entityForceFrom);
+                double mag = NaturalLaws.FORCE_BASE_MULTIPLIER / (distance * distance);
+                double angleTowards = getAngleBetween(cell, entityForceFrom);
                 if (canEat(entityForceFrom, cell)) {
-                    return new Force(mag * cell.getIncentiveDeath(), ang);
+                    return new Force(mag * cell.getIncentiveDeath(), angleTowards);
                 } else if (canEat(entityForceUpon, entityForceFrom)) {
-                    return new Force(mag * cell.getIncentiveMass() * entityForceFrom.getMass(), ang);
-                } else if (distance <= entityForceUpon.getRadius()) {
-                    return new Force(-mag * PUSH_FLAT_WEIGHT, ang);
+                    return new Force(mag * cell.getIncentiveMass() * entityForceFrom.getMass(), angleTowards);
+                } else if (distance <= cell.getRadius()) {
+                    return new Force(mag * NaturalLaws.FORCE_COLLISION_GRAVITY, angleTowards);
                 }
             }
         }
@@ -128,9 +126,9 @@ public class AgarWorld {
     }
 
     private Food newRandomFood() {
-        double x = NEW_FOOD_X_MIN + (Math.random() * NEW_FOOD_X_RANGE);
-        double y = NEW_FOOD_Y_MIN + (Math.random() * NEW_FOOD_Y_RANGE);
-        double mass = NEW_FOOD_MASS_MIN + (Math.random() * NEW_FOOD_MASS_RANGE) ;
+        double x = newFoodXMin + (Math.random() * newFoodXRange);
+        double y = newFoodYMin + (Math.random() * newFoodYRange);
+        double mass = newFoodMassMin + (Math.random() * newFoodMassRange) ;
         return new Food(x, y, mass);
     }
 

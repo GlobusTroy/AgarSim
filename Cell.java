@@ -18,9 +18,6 @@ public class Cell implements PhysicalEntity{
     private double motiveWeightDeath;
     private double motiveWeightMass;
 
-    private final double SPEED_BASE = 50;
-    private final double FAMINE_POINT = 1.0;
-
     private int invincibleFrames;
 
     public Cell(double x, double y, double mass, double splitPoint, Color color, double senseRange) {
@@ -48,6 +45,9 @@ public class Cell implements PhysicalEntity{
         this.color = other.color;
         this.senseRange = other.senseRange;
         this.invincibleFrames = 0;
+
+        this.motiveWeightDeath = other.motiveWeightDeath;
+        this.motiveWeightMass = other.motiveWeightMass;
     }
 
     public double getIncentiveMass() {
@@ -93,7 +93,7 @@ public class Cell implements PhysicalEntity{
     }
 
     public double getMaxSpeed() {
-        return SPEED_BASE / Math.sqrt(mass);
+        return NaturalLaws.CELL_SPEED_BASE / Math.sqrt(mass);
     }
 
     public double getX() {
@@ -139,7 +139,7 @@ public class Cell implements PhysicalEntity{
     }
 
     public boolean isDead() {
-        return mass <= FAMINE_POINT;
+        return mass <= NaturalLaws.CELL_FAMINE_POINT;
     }
 
     public void kill() {
