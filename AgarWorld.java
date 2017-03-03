@@ -5,10 +5,6 @@ import java.util.ArrayList;
  * Created by troymartin on 3/1/17.
  */
 public class AgarWorld {
-
-    private final double CELL_MASS_CONSUME_RATIO = 1.25;
-    private final double DECAY_PER_TICK = 0.25;
-
     private double newFoodMassMin = 0.0;
     private double newFoodMassRange = 10.0;
     private double newFoodXMin;
@@ -20,17 +16,25 @@ public class AgarWorld {
     private double currentSystemMass;
     private ArrayList<PhysicalEntity> entities;
 
+    private final double MINIMUM_COORD = 100;
+    private final double CELL_START_MASS = 50;
+    private final Color CELL_START_COLOR = Color.blue;
+    private final double CELL_START_SPLIT_POINT = 125.0;
+    private final double CELL_START_SENSE_RANGE = 1000.0;
+
     public AgarWorld(int cellCount, double systemSize, double systemMass) {
 
-        newFoodXMin = 100;
-        newFoodYMin = 100;
+        newFoodXMin = MINIMUM_COORD;
+        newFoodYMin = MINIMUM_COORD;
         newFoodXRange = systemSize;
         newFoodYRange = systemSize;
 
         entities = new ArrayList<>();
         for (int i = 0; i < cellCount; i++) {
-            entities.add(new Cell(Math.random() * 800, Math.random() * 800, 50.0, 100.0, Color.blue, 500.0));
-            currentSystemMass += 50;
+            Cell newCell = new Cell(newFoodXMin + (newFoodXRange*Math.random()), newFoodYMin + (newFoodYRange*Math.random()), CELL_START_MASS,
+                    CELL_START_SPLIT_POINT, CELL_START_COLOR, CELL_START_SENSE_RANGE);
+            entities.add(newCell);
+            currentSystemMass += CELL_START_MASS;
         }
         this.totalSystemMass = systemMass;
     }
@@ -64,7 +68,7 @@ public class AgarWorld {
     private boolean canEat(PhysicalEntity eater, PhysicalEntity meal) {
         if (eater instanceof Cell) {
             if (meal instanceof Food) return true;
-            else return (eater.getMass() >= CELL_MASS_CONSUME_RATIO * meal.getMass());
+            else return (eater.getMass() >= NaturalLaws.CELL_MASS_CONSUME_RATIO * meal.getMass());
         }
         return false;
 
@@ -142,8 +146,8 @@ public class AgarWorld {
                 cell.move();
                 cell.impressForces(calculateForces(cell));
                 eatTouchingCellsAndFood(cell);
-                cell.removeMass(DECAY_PER_TICK);
-                currentSystemMass -= DECAY_PER_TICK;
+                cell.removeMass(NaturalLaws.CELL_DECAY_PER_TICK);
+                currentSystemMass -= NaturalLaws.CELL_DECAY_PER_TICK;
                 cell.buffTick();
                 while (cell.isReadyToDivide()) {
                     born.add(cell.divideSelf());
