@@ -1,5 +1,6 @@
 import java.awt.*;
-import java.util.ArrayList;
+import java.util.*;
+import java.util.List;
 
 /**
  * Created by troymartin on 3/1/17.
@@ -15,28 +16,45 @@ public class AgarWorld {
     private double totalSystemMass;
     private double currentSystemMass;
     private ArrayList<PhysicalEntity> entities;
+    private NaturalLaws naturalLaws;
 
     private final double MINIMUM_COORD = 100;
-    private final double CELL_START_MASS = 50;
-    private final Color CELL_START_COLOR = Color.blue;
-    private final double CELL_START_SPLIT_POINT = 125.0;
-    private final double CELL_START_SENSE_RANGE = 1000.0;
 
-    public AgarWorld(int cellCount, double systemSize, double systemMass) {
 
+    public AgarWorld(List<Cell> cells, double systemSize, double systemMass) {
+        this(cells, systemSize, systemSize, systemMass);
+    }
+
+    public AgarWorld(List<Cell> cells, double xSize, double ySize, double systemMass) {
+        initializeVars(xSize, ySize, systemMass);
+        this.naturalLaws = new NaturalLaws();
+        entities = new ArrayList<>();
+        addCells(cells);
+    }
+
+    public AgarWorld(List<Cell> cells, double xSize, double ySize, double systemMass, NaturalLaws naturalLaws) {
+        initializeVars(xSize, ySize, systemMass);
+        this.naturalLaws = naturalLaws;
+        entities = new ArrayList<>();
+        addCells(cells);
+    }
+
+    private void initializeVars(double xSize, double ySize, double systemMass) {
         newFoodXMin = MINIMUM_COORD;
         newFoodYMin = MINIMUM_COORD;
-        newFoodXRange = systemSize;
-        newFoodYRange = systemSize;
-
-        entities = new ArrayList<>();
-        for (int i = 0; i < cellCount; i++) {
-            Cell newCell = new Cell(newFoodXMin + (newFoodXRange*Math.random()), newFoodYMin + (newFoodYRange*Math.random()), CELL_START_MASS,
-                    CELL_START_SPLIT_POINT, CELL_START_COLOR, CELL_START_SENSE_RANGE);
-            entities.add(newCell);
-            currentSystemMass += CELL_START_MASS;
-        }
+        newFoodXRange = xSize;
+        newFoodYRange = ySize;
         this.totalSystemMass = systemMass;
+    }
+
+
+
+    private void addCells(List<Cell> cells) {
+        for (Cell cell: cells) {
+            cell.setNaturalLaws(naturalLaws);
+            entities.add(cell);
+            currentSystemMass += cell.getMass();
+        }
     }
 
     public ArrayList<PhysicalEntity> getEntities() {return entities;}
@@ -68,7 +86,7 @@ public class AgarWorld {
     private boolean canEat(PhysicalEntity eater, PhysicalEntity meal) {
         if (eater instanceof Cell) {
             if (meal instanceof Food) return true;
-            else return (eater.getMass() >= NaturalLaws.CELL_MASS_CONSUME_RATIO * meal.getMass());
+            else return (eater.getMass() >= naturalLaws.getCellMassConsumeRatio() * meal.getMass());
         }
         return false;
 
@@ -93,7 +111,7 @@ public class AgarWorld {
         double homeX = (2 * newFoodXMin + newFoodXRange) / 2;
         double homeY = (2 * newFoodYMin + newFoodYRange) / 2;
         double ang = getAngleBetween(cell.getX(), cell.getY(), homeX, homeY);
-        return new Force(NaturalLaws.FORCE_BASE_MULTIPLIER, ang);
+        return new Force(naturalLaws.getForceBaseMultiplier(), ang);
     }
 
     private Force getForceBetween(PhysicalEntity entityForceUpon, PhysicalEntity entityForceFrom) {
@@ -101,14 +119,14 @@ public class AgarWorld {
         if (entityForceUpon instanceof Cell) {
             Cell cell = (Cell) entityForceUpon;
             if (distance <= (cell.getSenseRange())) {
-                double mag = NaturalLaws.FORCE_BASE_MULTIPLIER / (distance * distance);
+                double mag = naturalLaws.getForceBaseMultiplier() / (distance * distance);
                 double angleTowards = getAngleBetween(cell, entityForceFrom);
                 if (canEat(entityForceFrom, cell)) {
                     return new Force(mag * cell.getIncentiveDeath(), angleTowards);
                 } else if (canEat(entityForceUpon, entityForceFrom)) {
                     return new Force(mag * cell.getIncentiveMass() * entityForceFrom.getMass(), angleTowards);
                 } else if (distance <= cell.getRadius()) {
-                    return new Force(mag * NaturalLaws.FORCE_COLLISION_GRAVITY, angleTowards);
+                    return new Force(mag * naturalLaws.getForceCollision(), angleTowards);
                 }
             }
         }
@@ -146,8 +164,8 @@ public class AgarWorld {
                 cell.move();
                 cell.impressForces(calculateForces(cell));
                 eatTouchingCellsAndFood(cell);
-                cell.removeMass(NaturalLaws.CELL_DECAY_PER_TICK);
-                currentSystemMass -= NaturalLaws.CELL_DECAY_PER_TICK;
+                cell.removeMass(naturalLaws.getCellDecayPerTick());
+                currentSystemMass -= naturalLaws.getCellDecayPerTick();
                 cell.buffTick();
                 while (cell.isReadyToDivide()) {
                     born.add(cell.divideSelf());

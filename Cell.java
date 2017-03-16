@@ -18,6 +18,8 @@ public class Cell implements PhysicalEntity{
     private double motiveWeightDeath;
     private double motiveWeightMass;
 
+    private NaturalLaws naturalLaws;
+
     private int invincibleFrames;
 
     public Cell(double x, double y, double mass, double splitPoint, Color color, double senseRange) {
@@ -29,12 +31,17 @@ public class Cell implements PhysicalEntity{
         this.senseRange = senseRange;
         this.invincibleFrames = 0;
 
-        this.motiveWeightDeath = -100.0;
-        this.motiveWeightMass = 10.0;
-
+        this.motiveWeightDeath = -100.0; //Temp
+        this.motiveWeightMass = 10.0;    //Temp
 
         vx = 0;
         vy = 0;
+        this.naturalLaws = null;
+    }
+
+    public Cell(double x, double y, double mass, double splitPoint, Color color, double senseRange, NaturalLaws naturalLaws) {
+        this(x, y, mass, splitPoint, color, senseRange);
+        this.naturalLaws = naturalLaws;
     }
 
     public Cell (Cell other) {
@@ -48,6 +55,15 @@ public class Cell implements PhysicalEntity{
 
         this.motiveWeightDeath = other.motiveWeightDeath;
         this.motiveWeightMass = other.motiveWeightMass;
+        this.naturalLaws = other.naturalLaws;
+    }
+
+    public void setNaturalLaws(NaturalLaws naturalLaws) {
+        this.naturalLaws = naturalLaws;
+    }
+
+    public NaturalLaws getNaturalLaws() {
+        return this.naturalLaws;
     }
 
     public double getIncentiveMass() {
@@ -93,7 +109,7 @@ public class Cell implements PhysicalEntity{
     }
 
     public double getMaxSpeed() {
-        return NaturalLaws.CELL_SPEED_BASE / Math.sqrt(mass);
+        return naturalLaws.getCellSpeedBase() / Math.sqrt(mass);
     }
 
     public double getX() {
@@ -139,7 +155,7 @@ public class Cell implements PhysicalEntity{
     }
 
     public boolean isDead() {
-        return mass <= NaturalLaws.CELL_FAMINE_POINT;
+        return mass <= naturalLaws.getCellFaminePoint();
     }
 
     public void kill() {
@@ -158,6 +174,7 @@ public class Cell implements PhysicalEntity{
         newCell.vy = getMaxSpeed()*(Math.sin(angle));
         newCell.enforceSpeedLimit();
 
+        //Temp
         if (Math.random() > 0.9) {
             float[] hsb = Color.RGBtoHSB((int) (Math.random()*255), (int) (Math.random()*255), (int) (Math.random()*255), null);
             newCell.color = Color.getHSBColor(hsb[0], hsb[1], hsb[2]);
@@ -166,7 +183,6 @@ public class Cell implements PhysicalEntity{
         }
 
         newCell.invincibleFrames = 10;
-
         return newCell;
     }
 

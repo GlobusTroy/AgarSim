@@ -10,10 +10,10 @@ public class AgarFrame extends JFrame {
 
     Canvas canvas;
 
-    AgarFrame(String title, AgarWorld world, int pixelSize) {
+    AgarFrame(String title, AgarWorld world, int pixelSizeX, int pixelSizeY) {
         setTitle(title);
 
-        canvas = new AgarCanvas(world, pixelSize);
+        canvas = new AgarCanvas(world, pixelSizeX, pixelSizeY);
         add(canvas);
 
         addWindowListener(new WindowAdapter() {
@@ -24,6 +24,10 @@ public class AgarFrame extends JFrame {
             }
         });
         pack();
+    }
+
+    AgarFrame(String title, AgarWorld world, int pixelSize) {
+        this(title, world, pixelSize, pixelSize);
     }
 
     AgarCanvas getCanvas() {

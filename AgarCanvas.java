@@ -17,12 +17,16 @@ public class AgarCanvas extends Canvas implements ActionListener {
     private boolean readyToPaint;
     Timer t;
 
-    public AgarCanvas(AgarWorld world, int pixelSize) {
+    public AgarCanvas(AgarWorld world, int pixelSizeX, int pixelSizeY) {
         this.world = world;
-        setSize(pixelSize, pixelSize);
+        setSize(pixelSizeX, pixelSizeY);
         setBackground(COLOR_BACKGROUND);
         readyToPaint = true;
         t = new Timer(51, this);
+    }
+
+    public AgarCanvas(AgarWorld world, int pixelSize) {
+        this(world, pixelSize, pixelSize);
     }
 
     public void actionPerformed(ActionEvent e) {
