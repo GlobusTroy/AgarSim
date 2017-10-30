@@ -19,6 +19,10 @@ public class Food implements PhysicalEntity {
         return (mass <= 0);
     }
 
+    public boolean isDetectable() {
+        return true;
+    }
+
     public void kill() {
         mass = 0;
     }

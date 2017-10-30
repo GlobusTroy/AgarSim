@@ -1,4 +1,6 @@
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by troymartin on 3/1/17.
@@ -12,6 +14,8 @@ public class Cell implements PhysicalEntity{
     private double mass;
 
     private double splitPoint;
+    private int numChildren;
+    private double childrenMassRatio;
     private double senseRange;
     private Color color;
 
@@ -22,11 +26,14 @@ public class Cell implements PhysicalEntity{
 
     private int invincibleFrames;
 
-    public Cell(double x, double y, double mass, double splitPoint, Color color, double senseRange) {
+    public Cell(double x, double y, double mass, double splitPoint, int numChildren, double childrenMassRatio,
+                Color color, double senseRange) {
         this.x = x;
         this.y = y;
         this.mass = mass;
         this.splitPoint = splitPoint;
+        this.numChildren = numChildren;
+        this.childrenMassRatio = childrenMassRatio;
         this.color = color;
         this.senseRange = senseRange;
         this.invincibleFrames = 0;
@@ -39,8 +46,8 @@ public class Cell implements PhysicalEntity{
         this.naturalLaws = null;
     }
 
-    public Cell(double x, double y, double mass, double splitPoint, Color color, double senseRange, NaturalLaws naturalLaws) {
-        this(x, y, mass, splitPoint, color, senseRange);
+    public Cell(double x, double y, double mass, double splitPoint, int numChildren, double childrenMassRatio, Color color, double senseRange, NaturalLaws naturalLaws) {
+        this(x, y, mass, splitPoint, numChildren, childrenMassRatio, color, senseRange);
         this.naturalLaws = naturalLaws;
     }
 
@@ -49,6 +56,8 @@ public class Cell implements PhysicalEntity{
         this.y = other.y;
         this.mass = other.mass;
         this.splitPoint = other.splitPoint;
+        this.numChildren = other.numChildren;
+        this.childrenMassRatio = other.childrenMassRatio;
         this.color = other.color;
         this.senseRange = other.senseRange;
         this.invincibleFrames = 0;
@@ -81,6 +90,10 @@ public class Cell implements PhysicalEntity{
 
     public boolean isInvincible() {
         return invincibleFrames > 0;
+    }
+
+    public boolean isDetectable() {
+        return !isInvincible();
     }
 
     public void buffTick() {
@@ -166,24 +179,41 @@ public class Cell implements PhysicalEntity{
         return mass/2;
     }
 
-    public Cell divideSelf() {
-        mass /= 2;
-        Cell newCell = new Cell(this);
-        double angle = Math.random() * 2 * Math.PI;
-        newCell.vx = getMaxSpeed()*(Math.cos(angle));
-        newCell.vy = getMaxSpeed()*(Math.sin(angle));
-        newCell.enforceSpeedLimit();
+    public List<Cell> spawnOffspring() {
+        List<Cell> offspring = new ArrayList<>();
 
-        //Temp
-        if (Math.random() > 0.9) {
-            float[] hsb = Color.RGBtoHSB((int) (Math.random()*255), (int) (Math.random()*255), (int) (Math.random()*255), null);
-            newCell.color = Color.getHSBColor(hsb[0], hsb[1], hsb[2]);
-        } else {
-            newCell.color = this.color;
+        double childMass = childrenMassRatio * mass;
+
+        for(int i = 0; i < numChildren; i++) {
+            if (mass >= childMass) {
+                mass -= childMass;
+                Cell child = new Cell(this);
+                child.mass = childMass;
+                double angle = Math.random() * 2 * Math.PI;
+                child.vx = getMaxSpeed()*(Math.cos(angle));
+                child.vy = getMaxSpeed()*(Math.sin(angle));
+                child.enforceSpeedLimit();
+
+                child.color = this.color;
+
+                /*//Temp
+                if (Math.random() > 0.9) {
+                    float[] hsb = getRandomColorAsFloatArray();
+                    child.color = Color.getHSBColor(hsb[0], hsb[1], hsb[2]);
+                } else {
+                    child.color = this.color;
+                }*/
+
+                child.invincibleFrames = 10;
+                offspring.add(child);
+            }
         }
 
-        newCell.invincibleFrames = 10;
-        return newCell;
+        return offspring;
+    }
+
+    private float[] getRandomColorAsFloatArray() {
+        return Color.RGBtoHSB((int) (Math.random()*255), (int) (Math.random()*255), (int) (Math.random()*255), null);
     }
 
     public void drawMe(Graphics g) {

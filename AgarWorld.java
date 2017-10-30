@@ -1,4 +1,3 @@
-import java.awt.*;
 import java.util.*;
 import java.util.List;
 
@@ -95,7 +94,7 @@ public class AgarWorld {
     private Force[] calculateForces(Cell cell) {
         ArrayList<Force> forces = new ArrayList<>();
         for (PhysicalEntity other : entities) {
-            if (cell != other) {
+            if (cell != other && other.isDetectable()) {
                 Force newForce = getForceBetween(cell, other);
                 if (newForce != null) forces.add(newForce);
             }
@@ -162,13 +161,13 @@ public class AgarWorld {
             if (entity instanceof Cell) {
                 Cell cell = (Cell) entity;
                 cell.move();
-                cell.impressForces(calculateForces(cell));
+                cell.impressForces( calculateForces(cell) );
                 eatTouchingCellsAndFood(cell);
                 cell.removeMass(naturalLaws.getCellDecayPerTick());
                 currentSystemMass -= naturalLaws.getCellDecayPerTick();
                 cell.buffTick();
                 while (cell.isReadyToDivide()) {
-                    born.add(cell.divideSelf());
+                    born.addAll(cell.spawnOffspring());
                 }
             }
 

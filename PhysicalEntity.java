@@ -10,6 +10,7 @@ public interface PhysicalEntity {
     double getMass();
     double getRadius();
     void kill();
+    boolean isDetectable();
     boolean isDead();
     void drawMe(Graphics g);
 
